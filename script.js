@@ -1,15 +1,137 @@
 // script.js
 
+let canvas = document.getElementById('user-image');                 // canvas
+let ctx = canvas.getContext('2d'); 
+let imageInput = document.getElementById('image-input');            
+const clear = document.querySelector('button[type=reset]');
+const submit = document.querySelector('button[type=submit]');       // buttons
+const reset = document.querySelector('button[type=reset]');
+const readText = document.querySelector('button[type=button]');
+let form = document.getElementById("generate-meme");
+let synth = window.speechSynthesis;                                 // voice
+let volumeSelect = document.getElementById('volume-group');
+var voiceSelect = document.getElementById('voice-selection');
+let voices = [];
+let volumeLevel = 1;
+const volume = document.querySelector("[type='range']");
+
 const img = new Image(); // used to load image from <input> and draw to canvas
 
 // Fires whenever the img object loads a new image (such as with img.src =)
 img.addEventListener('load', () => {
-  // TODO
+  ctx.clearRect(0,0,canvas.width, canvas.height);                   // clear canvas
 
-  // Some helpful tips:
-  // - Fill the whole Canvas with black first to add borders on non-square images, then draw on top
-  // - Clear the form when a new image is selected
-  // - If you draw the image to canvas here, it will update as soon as a new image is selected
+  submit.disabled = false;                                          // toggling buttons
+  reset.disabled = true;
+  readText.disabled = false;
+
+  ctx.fillStyle = 'black';                                          // fill canvas with black
+  ctx.fillRect(0, 0, canvas.width, canvas.height); 
+
+  const dimensions = getDimmensions(canvas.width, canvas.height,    // drawing images
+    img.width, img.height); 
+  console.log(dimensions);
+  ctx.drawImage(img, dimensions.startX, dimensions.startY, 
+    dimensions.width, dimensions.height);
+});
+
+// load in image on input change
+imageInput.addEventListener('change', () => {
+  const imageURL = URL.createObjectURL(imageInput.files[0]);       // load in image
+  img.src = URL.createObjectURL(imageInput.files[0]);              // file path of image
+  img.alt = imageInput.files[0].name;                              // setting image alt to file path
+});
+
+// generate meme when submitted
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  const topText = document.getElementById("text-top").value;       // top text values
+  const bottomText = document.getElementById('text-bottom').value; // bottom text value
+
+  ctx.fillStyle = 'white';                                       // styling text
+  ctx.font = '50px Comic Sans MS';
+  ctx.textAlign = 'center';
+  ctx.fillText(topText, canvas.width/2, 50);
+  ctx.fillText(bottomText, canvas.width/2, canvas.height-40);
+
+  submit.disabled = true;                                          // button toggling
+  reset.disabled = false;
+  readText.disabled = false;                                       
+});
+                                                                  
+// clearing canvas                                               
+clear.addEventListener('click', () => {
+  ctx.clearRect(0,0,canvas.width, canvas.height);                  // canvas clear
+
+  submit.disabled = false;                                         // button toggling
+  reset.disabled = true;
+  readText.disabled = true;  
+});
+
+// retrieving list of voices
+function populateVoiceList() {
+  voices = synth.getVoices();                                       // 
+  voiceSelect.disabled = false;
+  voiceSelect.remove(0);
+  
+  for(var i = 0; i < voices.length ; i++) {
+    var option = document.createElement('option');
+    option.textContent = voices[i].name + ' (' + voices[i].lang + ')';
+
+    if(voices[i].default) {
+    option.textContent += ' -- DEFAULT';
+    }
+
+    option.setAttribute('data-lang', voices[i].lang);
+    option.setAttribute('data-name', voices[i].name);
+    voiceSelect.appendChild(option);
+  }
+}
+
+// populating voice list
+populateVoiceList();
+if (speechSynthesis.onvoiceschanged !== undefined) {
+  speechSynthesis.onvoiceschanged = populateVoiceList;
+}
+
+// browser speaking two inputs with the selected voice type
+readText.addEventListener('click', (e) => {
+  e.preventDefault();    
+
+  let topText = document.getElementById("text-top").value;
+  let bottomText = document.getElementById("text-bottom").value;
+
+  let tbutterance = new SpeechSynthesisUtterance(topText + ' ' + bottomText);
+
+  var selectedVoice = voiceSelect.selectedOptions[0].getAttribute('data-name');
+    for(var i = 0; i < voices.length ; i++) {
+      if(voices[i].name === selectedVoice) {
+        tbutterance.voice = voices[i];
+    }
+  }
+
+  // volumeLevel = document.querySelector("input[type=range]");
+  tbutterance.volume = volumeLevel/100.0;
+  synth.speak(tbutterance);
+});
+
+// volume slider icons
+volumeSelect.addEventListener('input', (e) => {
+  let volumeRange = document.querySelector('input[type=range]').value;
+  volumeLevel = volumeRange;
+  if (volumeRange == 0){
+    document.querySelector('#volume-group img').src = 'icons/volume-level-0.svg';
+  }
+  else if (volumeRange <= 33){
+    document.querySelector('#volume-group img').src = 'icons/volume-level-1.svg';
+  }
+  else if (volumeRange <= 66){
+    document.querySelector('#volume-group img').src = 'icons/volume-level-2.svg';
+  }
+  else {
+    document.querySelector('#volume-group img').src = 'icons/volume-level-3.svg';
+  }
 });
 
 /**
