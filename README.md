@@ -5,8 +5,8 @@
 
 ## Part 1:
 
-LINK TO YOUR PUBLISHED SITE
+https://vchen51.github.io/Lab5/
 
 ## Part 2:
 
-LINK TO YOUR PART 2 REPOSITORY
+https://github.com/vchen51/github-actions-for-ci/issues/7#issue-874252460
